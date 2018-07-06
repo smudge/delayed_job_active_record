@@ -44,6 +44,8 @@ describe Delayed::Backend::ActiveRecord::Job do
         let(:dbms) { "MySQL" }
 
         it "uses the optimized sql version" do
+          allow(Delayed::Backend::ActiveRecord::Job).to receive(:reserve_with_scope_using_optimized_mysql)
+            .and_return(job)
           allow(Delayed::Backend::ActiveRecord::Job).to receive(:reserve_with_scope_using_default_sql)
           Delayed::Backend::ActiveRecord::Job.reserve_with_scope(scope, worker, Time.current)
           expect(Delayed::Backend::ActiveRecord::Job).not_to have_received(:reserve_with_scope_using_default_sql)

@@ -144,11 +144,15 @@ module Delayed
           # while updating. But during the where clause, for mysql(>=5.6.4),
           # it queries with precision as well. So removing the precision
           now = now.change(usec: 0)
-          # This works on MySQL and possibly some other DBs that support
-          # UPDATE...LIMIT. It uses separate queries to lock and return the job
-          count = ready_scope.limit(1).update_all(locked_at: now, locked_by: worker.name)
-          return nil if count == 0
-          where(locked_at: now, locked_by: worker.name, failed_at: nil).first
+
+          # Despite MySQL's support of UPDATE...LIMIT, it has an optimizer bug
+          # that results in filesorts rather than index scans, which is very
+          # expensive with a large number of jobs in the table:
+          # http://bugs.mysql.com/bug.php?id=74049
+          # The PostgreSQL and MSSQL reserve strategies, while valid syntax in
+          # MySQL, result in deadlocks. So, we use the default strategy of
+          # SELECT then UPDATE:
+          reserve_with_scope_using_default_sql(ready_scope, worker, now)
         end
 
         def self.reserve_with_scope_using_optimized_mssql(ready_scope, worker, now)
