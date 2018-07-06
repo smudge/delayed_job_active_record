@@ -111,9 +111,16 @@ module Delayed
         def self.reserve_with_scope_using_default_sql(ready_scope, worker, now)
           # This is our old fashion, tried and true, but slower lookup
           ready_scope.limit(worker.read_ahead).detect do |job|
-            count = ready_scope.where(id: job.id).update_all(locked_at: now, locked_by: worker.name)
-            count == 1 && job.reload
+            update_attrs = { locked_at: now, locked_by: worker.name }
+            count = ready_scope.where(id: job.id).update_all(update_attrs)
+            count == 1 && fake_reload_job(job, update_attrs)
           end
+        end
+
+        def self.fake_reload_job(job, attrs)
+          job.assign_attributes(attrs)
+          job.send(:changes_applied)
+          true
         end
 
         def self.reserve_with_scope_using_optimized_postgres(ready_scope, worker, now)
