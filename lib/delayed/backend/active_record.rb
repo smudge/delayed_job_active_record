@@ -120,7 +120,7 @@ module Delayed
         def self.fake_reload_job(job, attrs)
           job.assign_attributes(attrs)
           job.send(:changes_applied)
-          true
+          job
         end
 
         def self.reserve_with_scope_using_optimized_postgres(ready_scope, worker, now)
