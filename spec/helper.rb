@@ -1,16 +1,18 @@
-require "simplecov"
-require "coveralls"
+unless ENV["SKIP_COVERAGE"]
+  require "simplecov"
+  require "coveralls"
 
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
-  [
-    SimpleCov::Formatter::HTMLFormatter,
-    Coveralls::SimpleCov::Formatter
-  ]
-)
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
+    [
+      SimpleCov::Formatter::HTMLFormatter,
+      Coveralls::SimpleCov::Formatter
+    ]
+  )
 
-SimpleCov.start do
-  add_filter "/spec/"
-  minimum_coverage(73.33)
+  SimpleCov.start do
+    add_filter "/spec/"
+    minimum_coverage(73.33)
+  end
 end
 
 require "logger"
