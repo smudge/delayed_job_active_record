@@ -113,11 +113,11 @@ module Delayed
           ready_scope.limit(worker.read_ahead).detect do |job|
             update_attrs = { locked_at: now, locked_by: worker.name }
             count = ready_scope.where(id: job.id).update_all(update_attrs)
-            count == 1 && fake_reload_job(job, update_attrs)
+            count == 1 && apply_changes_without_reload(job, update_attrs)
           end
         end
 
-        def self.fake_reload_job(job, attrs)
+        def self.apply_changes_without_reload(job, attrs)
           job.assign_attributes(attrs)
           job.send(:changes_applied)
           job
