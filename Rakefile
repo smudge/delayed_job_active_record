@@ -57,15 +57,16 @@ task :benchmark do
         Delayed::Job.delete_all
         job_count.times { delay.sleep(job_time) }
         Delayed::Worker.read_ahead = worker_count
-        workers = Array.new(worker_count) { Delayed::Worker.new(quiet: true) }
 
         # Set up threads
         ready_connections = Queue.new
         start_work = Event.new
-        threads = workers.map do |worker|
+        threads = Array.new(worker_count) do
           Thread.new do
             begin
               ActiveRecord::Base.connection_pool.with_connection do
+                worker = Delayed::Worker.new(quiet: true)
+                worker.name = "thread:#{Thread.current.object_id}"
                 ready_connections << self
                 start_work.wait
                 Timeout.timeout(30) do
