@@ -85,7 +85,7 @@ task :benchmark do
                 ready_connections << self
                 start_work.wait
                 Timeout.timeout(30) do
-                  worker.work_off
+                  worker.work_off(job_count)
                 end
               end
             rescue Timeout::Error
