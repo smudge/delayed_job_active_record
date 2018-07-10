@@ -69,6 +69,8 @@ task :benchmark do
         ActiveRecord::Base.connection.execute <<~INSERT.squish
           INSERT INTO delayed_jobs (handler, run_at, created_at, updated_at) VALUES #{inserts.join(',')}
         INSERT
+        ActiveRecord::Base.connection.execute "OPTIMIZE TABLE delayed_jobs"
+
         Delayed::Worker.read_ahead = worker_count
 
         # Set up threads
