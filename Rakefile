@@ -55,7 +55,20 @@ task :benchmark do
 
         # Set up test case
         Delayed::Job.delete_all
-        job_count.times { delay.sleep(job_time) }
+        inserts = Array.new(job_count).map do
+          now = ActiveRecord::Base.sanitize_sql_array(["?", Time.now])
+          <<~VALUES.squish
+            (
+              '--- !ruby/object:Delayed::PerformableMethod\\nobject: !ruby/object {}\\nmethod_name: :sleep\\nargs:\\n- #{job_time}\\n',
+              #{now},
+              #{now},
+              #{now}
+            )
+          VALUES
+        end
+        ActiveRecord::Base.connection.execute <<~INSERT.squish
+          INSERT INTO delayed_jobs (handler, run_at, created_at, updated_at) VALUES #{inserts.join(',')}
+        INSERT
         Delayed::Worker.read_ahead = worker_count
 
         # Set up threads
